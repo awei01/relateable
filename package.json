@@ -1,22 +1,24 @@
 {
   "name": "relateables",
-  "version": "0.0.2",
+  "version": "0.0.1",
   "description": "Simple ODM/ORM for javascript data",
+  "keywords": ["ODM", "ORM", "relational", "data", "json"],
+  "engines": {
+    "node": ">=6.4"
+  },
+  "repository": "git@github.com:awei01/relateable.git",
   "main": "src/index.js",
   "scripts": {
     "test-dev": "jest --watchAll",
     "test": "npm run lint && jest",
     "lint": "eslint src"
   },
-  "keywords": [],
-  "author": "",
   "license": "UNLICENSED",
   "devDependencies": {
     "@babel/core": "^7.1.2",
     "@babel/preset-env": "^7.1.0",
     "@babel/preset-react": "^7.0.0",
     "babel-eslint": "^10.0.1",
-    "babel-loader": "^8.0.4",
     "eslint": "^5.6.1",
     "eslint-config-standard": "^12.0.0",
     "eslint-plugin-import": "^2.14.0",
