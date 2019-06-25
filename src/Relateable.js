@@ -153,6 +153,6 @@ function _extractRelationship (us, joinTo, configs, isOneToOne) {
 
 function _partial (fn, preset) {
   return function (...args) {
-    return fn.apply(null, [...preset, ...args])
+    return fn(...preset, ...args)
   }
 }
