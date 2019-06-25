@@ -1,8 +1,14 @@
 {
   "name": "relateables",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "Simple ODM/ORM for javascript data",
-  "keywords": ["ODM", "ORM", "relational", "data", "json"],
+  "keywords": [
+    "ODM",
+    "ORM",
+    "relational",
+    "data",
+    "json"
+  ],
   "engines": {
     "node": ">=6.4"
   },
