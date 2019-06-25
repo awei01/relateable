@@ -1,14 +1,14 @@
-# Relateable
+# Relateables
 
 This is a simple package to help define relationships on javascript data
 
 ## Usage
 
 ```
-const Relateable = require('relateable')
+const Relateables = require('relateables')
 
 // create a new instance
-const relations = Relateable()
+const relations = Relateables()
 
 // define a collection
 const users = relations.collect('users')
