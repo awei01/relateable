@@ -380,4 +380,18 @@ describe('Relateable', () => {
       }).toThrow('Collection [users.foo] trying to access undefined collection [foos]')
     })
   })
+
+  describe('Global config', () => {
+    it('can set primaryKey globally but be overridden', () => {
+      const relations = Relateable({ primaryKey: 'name' })
+      const users = relations.collect('users')
+        .fill([{ id: 1, name: 'Austin' }])
+      const phones = relations.collect('phones', { primaryKey: 'number' })
+        .fill([{ id: 2, number: 123 }])
+
+      expect(users.find('Austin').id).toBe(1)
+      expect(phones.find(123).id).toBe(2)
+    })
+  })
+
 })

@@ -1,7 +1,9 @@
-module.exports = function () {
+module.exports = function (defaults) {
+  defaults = defaults || {}
   const _collections = {}
 
   function collect (name, configs) {
+    configs = Object.assign({}, defaults, configs)
     const collection = Collection(_collections, name, configs)
     if (_collections[name]) { throw new Error(`Collection [${name}] has already been defined`) }
 
