@@ -1,6 +1,6 @@
 {
   "name": "relateables",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Simple ODM/ORM for javascript data",
   "main": "src/index.js",
   "scripts": {
@@ -28,6 +28,5 @@
     "eslint-plugin-standard": "^4.0.0",
     "jest": "^24.8.0"
   },
-  "dependencies": {
-  }
+  "dependencies": {}
 }
