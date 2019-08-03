@@ -12,7 +12,7 @@
   "engines": {
     "node": ">=6.4"
   },
-  "repository": "git@github.com:awei01/relateable.git",
+  "repository": "git@github.com:awei01/relateables.git",
   "main": "src/index.js",
   "scripts": {
     "test-dev": "jest --watchAll",
