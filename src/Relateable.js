@@ -40,9 +40,26 @@ function Collection (_collections, name, configs) {
   const _entityProto = _configs.Entity = {} // hold the entity prototype
 
   const _collection = []
+  const _props = {
+    fields: [],
+    aliases: []
+  }
 
+  function _validateAndReserveFields (item) {
+    const keys = Object.keys(item)
+    for (let i = 0; i < keys.length; i++) {
+      const field = keys[i]
+      if (_props.aliases.includes(field)) {
+        throw new Error(`Alias [${field}] exists on [${name}] and cannot be assigned`)
+      }
+      if (!_props.fields.includes(field)) {
+        _props.fields.push(field)
+      }
+    }
+  }
   function fill (data) {
     data.forEach((item) => {
+      _validateAndReserveFields(item)
       const entity = Entity(_collection, item)
       _collection.push(entity)
     })
@@ -64,10 +81,19 @@ function Collection (_collections, name, configs) {
     }
   }
 
+  function _validateAndReserveAlias (alias) {
+    if (_props.aliases.includes(alias)) {
+      throw new Error(`Collection [${name}] already has relationship for [${alias}]`)
+    }
+    if (_props.fields.includes(alias)) {
+      throw new Error(`Field [${alias}] exists on [${name}] and cannot be aliased`)
+    }
+    _props.aliases.push(alias)
+  }
   function _makeRelationship (relationship) {
-    const $alias = `$${relationship.alias}`
-    if ($alias in _entityProto) { throw new Error(`Collection [${name}] already has relationship for [${relationship.alias}]`) }
-    Object.defineProperty(_entityProto, $alias, {
+    const { alias } = relationship
+    _validateAndReserveAlias(alias)
+    Object.defineProperty(_entityProto, alias, {
       get () {
         return relationship.resolve(_collections, this)
       }
