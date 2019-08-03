@@ -22,6 +22,6 @@ const phones = relations.collect('phones')
   .seed([{ id: 'a', number: '111-111-1111', userId: 1 }, { id: 'b', number: '222-222-2222', userId: 2 }])
   .relateToOne('users', { as: 'user', fromMy: 'userId' })
 
-console.log(users.find(1).$phone === phones.find(1))        // true
-console.log(phones.find(1).$user.$phone === users.find(1))  // true
+console.log(users.find(1).phone === phones.find(1))        // true
+console.log(phones.find(1).user.phone === users.find(1))  // true
 ```
