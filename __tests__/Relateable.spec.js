@@ -57,28 +57,6 @@ describe('Relateable', () => {
         authors.fill(_data)
       }).toThrow('Cannot fill [authors] because primaryKey [id] of [1] is already defined')
     })
-    it('can .find() and .filter() on a valid collection otherwise it will throw', () => {
-      const _data = [
-        { id: 1, name: 'Austin', group: 1 },
-        { id: 2, name: 'Justin', group: 1 },
-        { id: 3, name: 'Dustin', group: 2 }
-      ]
-      const relations = Relateable()
-      relations.collect('authors')
-        .fill(_data)
-
-      expect(relations.find('authors', 1)).toEqual(_data[0])
-      expect(relations.filter('authors', ({ group }) => {
-        return group === 1
-      })).toEqual([_data[0], _data[1]])
-
-      expect(() => {
-        relations.find('invalid', 1)
-      }).toThrow('Collection [invalid] does not exist')
-      expect(() => {
-        relations.filter('invalid', 1)
-      }).toThrow('Collection [invalid] does not exist')
-    })
     it('does not allow the relations collection property from being changed', () => {
       const _data = [
         { id: 1, name: 'Austin' },
@@ -118,7 +96,7 @@ describe('Relateable', () => {
     })
   })
   describe('collection methods', () => {
-    it('can find()', () => {
+    it('can find() with [primary key]', () => {
       const _data = [
         { id: 1, name: 'Austin' },
         { id: 2, name: 'Justin' }
@@ -140,7 +118,7 @@ describe('Relateable', () => {
       expect(authors.find('Austin')).toEqual(_data[0])
       expect(authors.find(1)).toBe(undefined)
     })
-    it('can find() using a function', () => {
+    it('can find() with [function]', () => {
       const _data = [
         { id: 1, name: 'Austin' },
         { id: 2, name: 'Justin' }
@@ -152,7 +130,41 @@ describe('Relateable', () => {
         return me.name === 'Austin'
       })).toEqual(_data[0])
     })
-    it('can filter()', () => {
+    it('can pickBy() with [array of primary keys] and preserves order', () => {
+      const _data = [
+        { id: 1, name: 'Austin' },
+        { id: 2, name: 'Justin' },
+        { id: 3, name: 'Bob' }
+      ]
+      const relations = Relateable()
+      const authors = relations.collect('authors')
+        .fill(_data)
+      expect(authors.pickBy([3, 1, 2])).toEqual([_data[2], _data[0], _data[1]])
+    })
+    it('can pickBy() with [field, array of values] and preserves order', () => {
+      const _data = [
+        { id: 1, name: 'Austin' },
+        { id: 2, name: 'Justin' },
+        { id: 3, name: 'Bob' }
+      ]
+      const relations = Relateable()
+      const authors = relations.collect('authors')
+        .fill(_data)
+      expect(authors.pickBy('name', ['Bob', 'Justin'])).toEqual([_data[2], _data[1]])
+    })
+    it('pickBy() filters out non-matching values', () => {
+      const _data = [
+        { id: 1, name: 'Austin' },
+        { id: 2, name: 'Justin' },
+        { id: 3, name: 'Bob' }
+      ]
+      const relations = Relateable()
+      const authors = relations.collect('authors').fill(_data)
+
+      expect(authors.pickBy('name', ['Fred', 'Justin'])).toEqual([_data[1]])
+      expect(authors.pickBy([2, 3, 4])).toEqual([_data[1], _data[2]])
+    })
+    it('can filter() with [function]', () => {
       const _data = [
         { id: 1, name: 'Austin' },
         { id: 2, name: 'Justin' }
@@ -239,8 +251,8 @@ describe('Relateable', () => {
   describe('One-to-many relationships', () => {
     const _DATA = {
       authors: [
-        { id: 1, name: 'Austin', likedPostIds: [1, 2, 3] },
-        { id: 2, name: 'Justin', likedPostIds: [1], likedPostTitles: ['Proident velit', 'Officia excepteur'] }
+        { id: 1, name: 'Austin', likedPostIds: [3, 1, 2], hatedPostTitles: [] },
+        { id: 2, name: 'Justin', likedPostIds: [1, 4, 5], hatedPostTitles: ['Quis aute elit ex', 'Lorem ipsum minim ad duis aliquip sunt'] }
       ],
       posts: [
         { id: 1, title: 'Proident velit', authorId: 1, authorName: 'Austin' },
@@ -289,14 +301,14 @@ describe('Relateable', () => {
       const users = relations.collect('authors')
         .fill(_DATA.authors)
         .relateToMany('posts', { as: 'likedIds', fromMy: ['likedPostIds'] })
-        .relateToMany('posts', { as: 'likedTitles', fromMy: ['likedPostTitles'], toTheir: 'title' })
+        .relateToMany('posts', { as: 'hatedTitles', fromMy: ['hatedPostTitles'], toTheir: 'title' })
       relations.collect('posts')
         .fill(_DATA.posts)
 
-      expect(users.find(1).likedIds).toEqual([_DATA.posts[0], _DATA.posts[1], _DATA.posts[2]])
-      expect(users.find(2).likedIds).toEqual([_DATA.posts[0]])
-      expect(users.find(1).likedTitles).toEqual([])
-      expect(users.find(2).likedTitles).toEqual([_DATA.posts[0], _DATA.posts[5]])
+      expect(users.find(1).likedIds).toEqual([_DATA.posts[2], _DATA.posts[0], _DATA.posts[1]])
+      expect(users.find(2).likedIds).toEqual([_DATA.posts[0], _DATA.posts[3], _DATA.posts[4]])
+      expect(users.find(1).hatedTitles).toEqual([])
+      expect(users.find(2).hatedTitles).toEqual([_DATA.posts[4], _DATA.posts[3]])
     })
     it('can define one-to-many relationship using an array on their object that includes a key on our object', () => {
       const relations = Relateable()
@@ -309,7 +321,7 @@ describe('Relateable', () => {
       expect(posts.find(1).likedBy).toEqual([_DATA.authors[0], _DATA.authors[1]])
       expect(posts.find(2).likedBy).toEqual([_DATA.authors[0]])
       expect(posts.find(3).likedBy).toEqual([_DATA.authors[0]])
-      expect(posts.find(4).likedBy).toEqual([])
+      expect(posts.find(4).likedBy).toEqual([_DATA.authors[1]])
     })
     it('can define one-to-many relationship using a custom function', () => {
       const relations = Relateable()

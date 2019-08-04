@@ -14,22 +14,8 @@ module.exports = function (defaults) {
     return collection
   }
 
-  function _resolveOrThrow (name) {
-    const result = _collections[name]
-    if (!result) { throw new Error(`Collection [${name}] does not exist`) }
-    return result
-  }
-  function find (name, primaryKey) {
-    return _resolveOrThrow(name).find(primaryKey)
-  }
-  function filter (name, filterFn) {
-    return _resolveOrThrow(name).filter(filterFn)
-  }
-
   Object.defineProperties(_collections, {
-    collect: { value: collect },
-    find: { value: find },
-    filter: { value: filter }
+    collect: { value: collect }
   })
 
   return _collections
@@ -65,6 +51,7 @@ function Collection (_collections, name, configs) {
     })
     return _collection
   }
+
   function find (keyOrFn) {
     const findFn = typeof keyOrFn === 'function'
       ? keyOrFn
@@ -79,6 +66,22 @@ function Collection (_collections, name, configs) {
       }
       idx++
     }
+  }
+
+  function pickBy (field, values) {
+    if (Array.isArray(field)) {
+      values = field
+      field = '$key'
+    }
+    return values.reduce((result, value) => {
+      const found = find((my) => {
+        return my[field] === value
+      })
+      if (found) {
+        result.push(found)
+      }
+      return result
+    }, [])
   }
 
   function _validateAndReserveAlias (alias) {
@@ -116,7 +119,9 @@ function Collection (_collections, name, configs) {
     name: { value: name },
     configs: { value: _configs },
     fill: { value: fill },
+    // filter: Array prototype method,
     find: { value: find },
+    pickBy: { value: pickBy },
     relateToOne: { value: relateToOne },
     relateToMany: { value: relateToMany }
   })
@@ -143,44 +148,43 @@ function Entity (collection, data) {
 function _extractRelationship (us, joinTo, configs, isOneToOne) {
   configs = configs || {}
   const alias = configs.as || joinTo
-
-  let usingFn = configs.usingFn
-  if (!usingFn) {
-    const { fromMy, toTheir } = Object.assign({ fromMy: '$key', toTheir: '$key' }, configs)
-    const isMineArray = Array.isArray(fromMy)
-    const myKey = isMineArray ? fromMy[0] : fromMy
-    const isTheirsArray = Array.isArray(toTheir)
-    const theirKey = isTheirsArray ? toTheir[0] : toTheir
-    usingFn = (me, him) => {
-      const myValue = me[myKey]
-      const theirValue = him[theirKey]
-      switch (true) {
-        case isMineArray && !isTheirsArray:
-          return (myValue || []).includes(theirValue)
-        case !isMineArray && isTheirsArray:
-          return (theirValue || []).includes(myValue)
-        default:
-          return myValue === theirValue
-      }
-    }
-  }
+  const { fromMy, toTheir, usingFn } = Object.assign({ fromMy: '$key', toTheir: '$key' }, configs)
+  const isMineArray = Array.isArray(fromMy)
+  const myKey = isMineArray ? fromMy[0] : fromMy
+  const isTheirsArray = Array.isArray(toTheir)
+  const theirKey = isTheirsArray ? toTheir[0] : toTheir
 
   function resolve (collections, me) {
     const them = collections[joinTo]
     if (!them) {
       throw new Error(`Collection [${us.name}.${alias}] trying to access undefined collection [${joinTo}]`)
     }
-    return them[isOneToOne ? 'find' : 'filter'](_partial(usingFn, [me]))
+    if (usingFn) {
+      return them[isOneToOne ? 'find' : 'filter']((him) => {
+        return usingFn(me, him)
+      })
+    }
+    const myValue = me[myKey]
+
+    switch (true) {
+      case isMineArray && !isTheirsArray:
+        // i have a list of foreign keys, so, return them in order
+        return them.pickBy(theirKey, myValue || [])
+      case !isMineArray && isTheirsArray:
+        // my key is in a list in one of their fields
+        return them.filter((him) => {
+          return (him[theirKey] || []).includes(myValue)
+        })
+      case !isMineArray && !isTheirsArray:
+        // one-to-one relationship
+        return them[isOneToOne ? 'find' : 'filter']((him) => {
+          return him[theirKey] === myValue
+        })
+    }
   }
 
   return {
     alias,
     resolve
-  }
-}
-
-function _partial (fn, preset) {
-  return function (...args) {
-    return fn(...preset, ...args)
   }
 }
