@@ -222,6 +222,26 @@ describe('Relateable', () => {
       expect(phones.find(1).users).toEqual(_DATA.users[0])
       expect(phones.find(2).users).toEqual(_DATA.users[1])
     })
+    it('can define relationship using my foreignKey that references their non-primaryKey that is an array', () => {
+      const userData = [
+        { id: 'Austin', hasPhones: [1, 2] }
+      ]
+      const phoneData = [
+        { id: 1 },
+        { id: 2 }
+      ]
+
+      const relations = Relateable()
+      const users = relations.collect('users')
+        .fill(userData)
+      const phones = relations.collect('phones')
+        .relateToOne('users', { as: 'owner', toTheir: ['hasPhones'] })
+        .fill(phoneData)
+
+      const user = users.find('Austin')
+      expect(phones.find(1).owner).toBe(user)
+      expect(phones.find(2).owner).toBe(user)
+    })
     it('can define aliased relationships', () => {
       const relations = Relateable()
       relations.collect('users')
@@ -411,7 +431,7 @@ describe('Relateable', () => {
           .fill(phones)
       }).toThrow('Alias [userId] exists on [phones] and cannot be assigned')
     })
-    it('.relate() throws when alias collides with field name', () => {
+    it('.relateTo[One|Many]() throws when alias collides with field name', () => {
       const phones = [
         { id: 1, value: 1111111, userId: 2, userName: 'Austin' },
         { id: 2, value: 2222222, userId: 1, userName: 'Justin' }

@@ -61,9 +61,8 @@ function Collection (_collections, name, configs) {
     let idx = 0
     let len = _collection.length
     while (idx < len) {
-      if (findFn(_collection[idx])) {
-        return _collection[idx]
-      }
+      const current = _collection[idx]
+      if (findFn(current)) { return current }
       idx++
     }
   }
@@ -172,7 +171,7 @@ function _extractRelationship (us, joinTo, configs, isOneToOne) {
         return them.pickBy(theirKey, myValue || [])
       case !isMineArray && isTheirsArray:
         // my key is in a list in one of their fields
-        return them.filter((him) => {
+        return them[isOneToOne ? 'find' : 'filter']((him) => {
           return (him[theirKey] || []).includes(myValue)
         })
       case !isMineArray && !isTheirsArray:
