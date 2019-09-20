@@ -1,6 +1,6 @@
 {
   "name": "relateables",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Simple ODM/ORM for javascript data",
   "keywords": [
     "ODM",
