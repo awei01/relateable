@@ -1,24 +1,36 @@
 module.exports = function (defaults) {
   defaults = defaults || {}
-  const _collections = {}
+  const _relateables = {}
 
   function collect (name, configs) {
     configs = Object.assign({}, defaults, configs)
-    const collection = Collection(_collections, name, configs)
-    if (_collections[name]) { throw new Error(`Collection [${name}] has already been defined`) }
+    const collection = Collection(_relateables, name, configs)
+    if (_relateables[name]) { throw new Error(`Collection [${name}] has already been defined`) }
 
-    Object.defineProperty(_collections, name, {
+    Object.defineProperty(_relateables, name, {
       value: collection,
       enumerable: true
     })
     return collection
   }
 
-  Object.defineProperties(_collections, {
-    collect: { value: collect }
+  function find (primaryKey) {
+    const names = Object.keys(_relateables)
+    let idx = 0
+    let len = names.length
+    while (idx < len) {
+      const found = _relateables[names[idx]].find(primaryKey)
+      if (found) { return found }
+      idx++
+    }
+  }
+
+  Object.defineProperties(_relateables, {
+    collect: { value: collect },
+    find: { value: find }
   })
 
-  return _collections
+  return _relateables
 }
 
 function Collection (_collections, name, configs) {

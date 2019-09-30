@@ -388,7 +388,7 @@ describe('Relateable', () => {
     })
   })
 
-  describe('Relatinship validation', () => {
+  describe('Relationship validation', () => {
     it('When defining relationship w/ same name will throw', () => {
       const relations = Relateable()
       const users = relations.collect('users')
@@ -452,6 +452,22 @@ describe('Relateable', () => {
       }).toThrow('Field [userId] exists on [phones] and cannot be aliased')
     })
   })
+
+  describe('find()', () => {
+    const _DATA = {
+      users: [ { id: 1 } ],
+      phones: [ { number: 1111 } ]
+    }
+    test('it can find any item within any collection', () => {
+      const relations = Relateable()
+      relations.collect('users').fill(_DATA.users)
+      relations.collect('phones', { primaryKey: 'number' }).fill(_DATA.phones)
+
+      expect(relations.find(1)).toEqual(_DATA.users[0])
+      expect(relations.find(1111)).toEqual(_DATA.phones[0])
+    })
+  })
+
   describe('Global config', () => {
     it('can set primaryKey globally but be overridden', () => {
       const relations = Relateable({ primaryKey: 'name' })
